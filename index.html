@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kehadiran Pelajar</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <img src="logo_kvpm.png" alt="Logo Kolej Vokasional Pasir Mas" class="logo">
+    <h1>Kehadiran & Hasil Kerja Pelajar</h1>
+    
+    <label for="subjek">Pilih Subjek:</label>
+    <select id="subjek" onchange="changeSelection()">
+        <option value="Matematik">Matematik</option>
+        <option value="Sains">Sains</option>
+        <option value="Bahasa Melayu">Bahasa Melayu</option>
+        <option value="Bahasa Inggeris">Bahasa Inggeris</option>
+        <option value="Sejarah">Sejarah</option>
+    </select>
+
+    <br><br>
+    <input type="text" id="studentName" placeholder="Masukkan nama pelajar">
+    <button onclick="addStudent()">Tambah Pelajar</button>
+    <button onclick="removeStudentByName()">Buang Nama Pelajar</button>
+
+    <table id="attendanceTable">
+        <tr>
+            <th>Nama Pelajar</th>
+            <th>Kehadiran</th>
+            <th>Point Harian</th>
+            <th>Catatan Guru</th>
+            <th>Hasil Kerja</th>
+        </tr>
+    </table>
+
+    <button style="margin-top: 20px;" onclick="downloadReport()">Muat Turun Laporan</button>
+
+    <script>
+        let dataStore = JSON.parse(localStorage.getItem("attendanceData")) || {};
+
+        function saveData() {
+            localStorage.setItem("attendanceData", JSON.stringify(dataStore));
+        }
+
+        function changeSelection() {
+            let selectedSubject = document.getElementById("subjek").value;
+            if (!dataStore[selectedSubject]) {
+                dataStore[selectedSubject] = [];
+            }
+            loadClassData(selectedSubject);
+        }
+
+        function loadClassData(subject) {
+            let table = document.getElementById("attendanceTable");
+            while (table.rows.length > 1) {
+                table.deleteRow(1);
+            }
+            dataStore[subject].forEach(student => {
+                addStudentToTable(student.name, student.status, student.points, student.notes, student.work);
+            });
+        }
+
+        function addStudent() {
+            let selectedSubject = document.getElementById("subjek").value;
+            let nameInput = document.getElementById("studentName");
+            let name = nameInput.value.trim();
+            if (name === "") {
+                alert("Sila masukkan nama pelajar.");
+                return;
+            }
+            let student = { name: name, status: "Tidak Hadir", points: 0, notes: "", work: null };
+            if (!dataStore[selectedSubject]) {
+                dataStore[selectedSubject] = [];
+            }
+            dataStore[selectedSubject].push(student);
+            addStudentToTable(name, "Tidak Hadir", 0, "", null);
+            nameInput.value = "";
+            saveData();
+        }
+
+        function addStudentToTable(name, status, points, notes, work) {
+            let table = document.getElementById("attendanceTable");
+            let row = table.insertRow(-1);
+            let cell1 = row.insertCell(0);
+            let cell2 = row.insertCell(1);
+            let cell3 = row.insertCell(2);
+            let cell4 = row.insertCell(3);
+            let cell5 = row.insertCell(4);
+
+            cell1.textContent = name;
+
+            let button = document.createElement("button");
+            button.textContent = status;
+            button.classList.add("btn", status === "Hadir" ? "hadir" : "tidak-hadir");
+            button.onclick = function () { toggleAttendance(name, button); };
+            cell2.appendChild(button);
+
+            let pointInput = document.createElement("input");
+            pointInput.type = "number";
+            pointInput.min = "0";
+            pointInput.max = "100";
+            pointInput.value = points;
+            pointInput.onchange = function () { updatePoints(name, pointInput.value); saveData(); };
+            cell3.appendChild(pointInput);
+
+            let noteInput = document.createElement("input");
+            noteInput.type = "text";
+            noteInput.value = notes;
+            noteInput.onchange = function () { updateNotes(name, noteInput.value); saveData(); };
+            cell4.appendChild(noteInput);
+
+            let fileInput = document.createElement("input");
+            fileInput.type = "file";
+            fileInput.onchange = function () { uploadWork(name, fileInput); };
+            cell5.appendChild(fileInput);
+
+            if (work) {
+                let link = document.createElement("a");
+                link.href = work;
+                link.textContent = "Muat Turun";
+                link.download = `${name}_hasil_kerja`;
+                link.style.marginLeft = "10px";
+                cell5.appendChild(link);
+            }
+        }
+
+        function toggleAttendance(name, button) {
+            let selectedSubject = document.getElementById("subjek").value;
+            let student = dataStore[selectedSubject].find(s => s.name === name);
+            if (student) {
+                student.status = student.status === "Hadir" ? "Tidak Hadir" : "Hadir";
+                button.textContent = student.status;
+                button.classList.toggle("hadir");
+                button.classList.toggle("tidak-hadir");
+                saveData();
+            }
+        }
+
+        function updatePoints(name, points) {
+            let selectedSubject = document.getElementById("subjek").value;
+            let student = dataStore[selectedSubject].find(s => s.name === name);
+            if (student) {
+                student.points = points;
+                saveData();
+            }
+        }
+
+        function updateNotes(name, notes) {
+            let selectedSubject = document.getElementById("subjek").value;
+            let student = dataStore[selectedSubject].find(s => s.name === name);
+            if (student) {
+                student.notes = notes;
+                saveData();
+            }
+        }
+
+        function uploadWork(name, fileInput) {
+            let selectedSubject = document.getElementById("subjek").value;
+            let student = dataStore[selectedSubject].find(s => s.name === name);
+            if (student) {
+                let file = fileInput.files[0];
+                if (file) {
+                    let reader = new FileReader();
+                    reader.onload = function (e) {
+                        let fileURL = e.target.result;
+                        student.work = fileURL;
+                        saveData();
+                        loadClassData(selectedSubject);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        }
+
+        function removeStudentByName() {
+            let selectedSubject = document.getElementById("subjek").value;
+            let nameInput = document.getElementById("studentName").value.trim();
+            if (!dataStore[selectedSubject]) return;
+            dataStore[selectedSubject] = dataStore[selectedSubject].filter(s => s.name !== nameInput);
+            saveData();
+            loadClassData(selectedSubject);
+        }
+
+        function downloadReport() {
+            let selectedSubject = document.getElementById("subjek").value;
+            let csvContent = "Nama Pelajar,Kehadiran,Point Harian,Catatan Guru\n";
+            dataStore[selectedSubject].forEach(student => {
+                csvContent += `${student.name},${student.status},${student.points},${student.notes}\n`;
+            });
+            let blob = new Blob([csvContent], { type: "text/csv" });
+            let link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `Laporan_${selectedSubject}.csv`;
+            link.click();
+        }
+
+        window.onload = function () {
+            changeSelection();
+        };
+    </script>
+</body>
+</html>

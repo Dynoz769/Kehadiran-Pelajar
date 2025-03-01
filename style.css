@@ -112,3 +112,61 @@ button:active {
     object-fit: cover;
     border-radius: 50%;
 }
+/* Gaya asas */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+    text-align: center;
+}
+
+/* Logo */
+.logo {
+    width: 100px;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Butang & Input */
+button, input, select {
+    font-size: 16px;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 5px;
+}
+
+/* Pastikan tabel boleh di-scroll di telefon */
+.table-container {
+    overflow-x: auto;
+    width: 100%;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+/* Media Query untuk telefon */
+@media screen and (max-width: 600px) {
+    h1 {
+        font-size: 20px;
+    }
+    
+    button, input, select {
+        font-size: 14px;
+        padding: 8px;
+    }
+    
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+    }
+}
+

@@ -3,204 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kehadiran Pelajar</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Graf Kehadiran & Laporan</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background: linear-gradient(to right, #00a8ff, #ff9f1a);
+            font-family: 'Poppins', sans-serif;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        h2 {
+            font-weight: bold;
+            color: #e84118;
+        }
+        .badge {
+            font-size: 1rem;
+            padding: 5px 10px;
+        }
+        .table-dark {
+            background: #273c75 !important;
+        }
+        .btn-danger {
+            background: #ff4757;
+            border: none;
+        }
+        .btn-danger:hover {
+            background: #e84118;
+        }
+    </style>
 </head>
 <body>
-    <img src="logo_kvpm.png" alt="Logo Kolej Vokasional Pasir Mas" class="logo">
-    <h1>Kehadiran & Hasil Kerja Pelajar</h1>
-    
-    <label for="subjek">Pilih Subjek:</label>
-    <select id="subjek" onchange="changeSelection()">
-        <option value="MAT KOMP">MATE KOMP</option>
-        <option value="ENG BUS">ENG BUS</option>
-        <option value="DKB 2243">DKB 2243</option>
-        <option value="DKB 2012">DKB 2012</option>
-        <option value="DKB 2332">DKB2332</option>
-        <option value="ETIKA PENGHAYATAN">ETIKA PENGHAYATAN</option>
-        <option value="MAT DISK">MAT DISK</option>
-        <option value="DKB 2023">DKB 2023</option>
-    </select>
+    <div class="container mt-4">
+        <h2 class="text-center text-primary">Graf Kehadiran Pelajar</h2>
+        <canvas id="grafKehadiran"></canvas>
+        
+        <h2 class="text-center text-secondary mt-4">Laporan Kehadiran</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr class="table-dark text-center">
+                    <th>No</th>
+                    <th>Nama Pelajar</th>
+                    <th>Jumlah Kehadiran</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="kehadiranTable">
+                <tr class="text-center">
+                    <td>1</td>
+                    <td>Ali bin Ahmad</td>
+                    <td>85%</td>
+                    <td><span class="badge bg-success">Baik</span></td>
+                </tr>
+                <tr class="text-center">
+                    <td>2</td>
+                    <td>Siti Nur Aisyah</td>
+                    <td>60%</td>
+                    <td><span class="badge bg-warning">Sederhana</span></td>
+                </tr>
+                <tr class="text-center">
+                    <td>3</td>
+                    <td>Mohd Izzat</td>
+                    <td>40%</td>
+                    <td><span class="badge bg-danger">Buruk</span></td>
+                </tr>
+            </tbody>
+        </table>
 
-    <br><br>
-    <input type="text" id="studentName" placeholder="Masukkan nama pelajar">
-    <button onclick="addStudent()">Tambah Pelajar</button>
-    <button onclick="removeStudentByName()">Buang Nama Pelajar</button>
-
-    <table id="attendanceTable">
-        <tr>
-            <th>Nama Pelajar</th>
-            <th>Kehadiran</th>
-            <th>Point Harian</th>
-            <th>Catatan Guru</th>
-            <th>Hasil Kerja</th>
-        </tr>
-    </table>
-
-    <button style="margin-top: 20px;" onclick="downloadReport()">Muat Turun Laporan</button>
+        <a href="dashboard.html" class="btn btn-danger mt-3">Kembali ke Dashboard</a>
+    </div>
 
     <script>
-        let dataStore = JSON.parse(localStorage.getItem("attendanceData")) || {};
+        const ctx = document.getElementById('grafKehadiran').getContext('2d');
 
-        function saveData() {
-            localStorage.setItem("attendanceData", JSON.stringify(dataStore));
-        }
+        // Data Kehadiran
+        const pelajar = ["Ali bin Ahmad", "Siti Nur Aisyah", "Mohd Izzat"];
+        const kehadiran = [85, 60, 40];
 
-        function changeSelection() {
-            let selectedSubject = document.getElementById("subjek").value;
-            if (!dataStore[selectedSubject]) {
-                dataStore[selectedSubject] = [];
-            }
-            loadClassData(selectedSubject);
-        }
+        // Gradient warna untuk graf
+        let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(0, 184, 148, 1)');
+        gradient.addColorStop(1, 'rgba(255, 118, 117, 0.3)');
 
-        function loadClassData(subject) {
-            let table = document.getElementById("attendanceTable");
-            while (table.rows.length > 1) {
-                table.deleteRow(1);
-            }
-            dataStore[subject].forEach(student => {
-                addStudentToTable(student.name, student.status, student.points, student.notes, student.work);
-            });
-        }
-
-        function addStudent() {
-            let selectedSubject = document.getElementById("subjek").value;
-            let nameInput = document.getElementById("studentName");
-            let name = nameInput.value.trim();
-            if (name === "") {
-                alert("Sila masukkan nama pelajar.");
-                return;
-            }
-            let student = { name: name, status: "Tidak Hadir", points: 0, notes: "", work: null };
-            if (!dataStore[selectedSubject]) {
-                dataStore[selectedSubject] = [];
-            }
-            dataStore[selectedSubject].push(student);
-            addStudentToTable(name, "Tidak Hadir", 0, "", null);
-            nameInput.value = "";
-            saveData();
-        }
-
-        function addStudentToTable(name, status, points, notes, work) {
-            let table = document.getElementById("attendanceTable");
-            let row = table.insertRow(-1);
-            let cell1 = row.insertCell(0);
-            let cell2 = row.insertCell(1);
-            let cell3 = row.insertCell(2);
-            let cell4 = row.insertCell(3);
-            let cell5 = row.insertCell(4);
-
-            cell1.textContent = name;
-
-            let button = document.createElement("button");
-            button.textContent = status;
-            button.classList.add("btn", status === "Hadir" ? "hadir" : "tidak-hadir");
-            button.onclick = function () { toggleAttendance(name, button); };
-            cell2.appendChild(button);
-
-            let pointInput = document.createElement("input");
-            pointInput.type = "number";
-            pointInput.min = "0";
-            pointInput.max = "100";
-            pointInput.value = points;
-            pointInput.onchange = function () { updatePoints(name, pointInput.value); saveData(); };
-            cell3.appendChild(pointInput);
-
-            let noteInput = document.createElement("input");
-            noteInput.type = "text";
-            noteInput.value = notes;
-            noteInput.onchange = function () { updateNotes(name, noteInput.value); saveData(); };
-            cell4.appendChild(noteInput);
-
-            let fileInput = document.createElement("input");
-            fileInput.type = "file";
-            fileInput.onchange = function () { uploadWork(name, fileInput); };
-            cell5.appendChild(fileInput);
-
-            if (work) {
-                let link = document.createElement("a");
-                link.href = work;
-                link.textContent = "Muat Turun";
-                link.download = `${name}_hasil_kerja`;
-                link.style.marginLeft = "10px";
-                cell5.appendChild(link);
-            }
-        }
-
-        function toggleAttendance(name, button) {
-            let selectedSubject = document.getElementById("subjek").value;
-            let student = dataStore[selectedSubject].find(s => s.name === name);
-            if (student) {
-                student.status = student.status === "Hadir" ? "Tidak Hadir" : "Hadir";
-                button.textContent = student.status;
-                button.classList.toggle("hadir");
-                button.classList.toggle("tidak-hadir");
-                saveData();
-            }
-        }
-
-        function updatePoints(name, points) {
-            let selectedSubject = document.getElementById("subjek").value;
-            let student = dataStore[selectedSubject].find(s => s.name === name);
-            if (student) {
-                student.points = points;
-                saveData();
-            }
-        }
-
-        function updateNotes(name, notes) {
-            let selectedSubject = document.getElementById("subjek").value;
-            let student = dataStore[selectedSubject].find(s => s.name === name);
-            if (student) {
-                student.notes = notes;
-                saveData();
-            }
-        }
-
-        function uploadWork(name, fileInput) {
-            let selectedSubject = document.getElementById("subjek").value;
-            let student = dataStore[selectedSubject].find(s => s.name === name);
-            if (student) {
-                let file = fileInput.files[0];
-                if (file) {
-                    let reader = new FileReader();
-                    reader.onload = function (e) {
-                        let fileURL = e.target.result;
-                        student.work = fileURL;
-                        saveData();
-                        loadClassData(selectedSubject);
-                    };
-                    reader.readAsDataURL(file);
+        const grafKehadiran = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: pelajar,
+                datasets: [{
+                    label: 'Jumlah Kehadiran',
+                    data: kehadiran,
+                    backgroundColor: gradient,
+                    borderColor: 'rgba(0, 184, 148, 1)',
+                    borderWidth: 1,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                animation: {
+                    duration: 1500,
+                    easing: 'easeInOutQuad'
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return 'Kehadiran: ' + tooltipItem.raw + '%';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: '#130f40',
+                            font: { weight: 'bold', size: 14 }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 10,
+                            font: { size: 14 },
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
                 }
             }
-        }
-
-        function removeStudentByName() {
-            let selectedSubject = document.getElementById("subjek").value;
-            let nameInput = document.getElementById("studentName").value.trim();
-            if (!dataStore[selectedSubject]) return;
-            dataStore[selectedSubject] = dataStore[selectedSubject].filter(s => s.name !== nameInput);
-            saveData();
-            loadClassData(selectedSubject);
-        }
-
-        function downloadReport() {
-            let selectedSubject = document.getElementById("subjek").value;
-            let csvContent = "Nama Pelajar,Kehadiran,Point Harian,Catatan Guru\n";
-            dataStore[selectedSubject].forEach(student => {
-                csvContent += `${student.name},${student.status},${student.points},${student.notes}\n`;
-            });
-            let blob = new Blob([csvContent], { type: "text/csv" });
-            let link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `Laporan_${selectedSubject}.csv`;
-            link.click();
-        }
-
-        window.onload = function () {
-            changeSelection();
-        };
+        });
     </script>
 </body>
 </html>

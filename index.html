@@ -3,143 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Graf Kehadiran & Laporan</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <style>
-        body {
-            background: linear-gradient(to right, #00a8ff, #ff9f1a);
-            font-family: 'Poppins', sans-serif;
-            color: #333;
-        }
-        .container {
-            max-width: 900px;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-        }
-        h2 {
-            font-weight: bold;
-            color: #e84118;
-        }
-        .badge {
-            font-size: 1rem;
-            padding: 5px 10px;
-        }
-        .table-dark {
-            background: #273c75 !important;
-        }
-        .btn-danger {
-            background: #ff4757;
-            border: none;
-        }
-        .btn-danger:hover {
-            background: #e84118;
-        }
-    </style>
+    <title>Kehadiran & Hasil Kerja Pelajar</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container mt-4">
-        <h2 class="text-center text-primary">Graf Kehadiran Pelajar</h2>
-        <canvas id="grafKehadiran"></canvas>
-        
-        <h2 class="text-center text-secondary mt-4">Laporan Kehadiran</h2>
-        <table class="table table-bordered">
-            <thead>
-                <tr class="table-dark text-center">
-                    <th>No</th>
-                    <th>Nama Pelajar</th>
-                    <th>Jumlah Kehadiran</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="kehadiranTable">
-                <tr class="text-center">
-                    <td>1</td>
-                    <td>Ali bin Ahmad</td>
-                    <td>85%</td>
-                    <td><span class="badge bg-success">Baik</span></td>
-                </tr>
-                <tr class="text-center">
-                    <td>2</td>
-                    <td>Siti Nur Aisyah</td>
-                    <td>60%</td>
-                    <td><span class="badge bg-warning">Sederhana</span></td>
-                </tr>
-                <tr class="text-center">
-                    <td>3</td>
-                    <td>Mohd Izzat</td>
-                    <td>40%</td>
-                    <td><span class="badge bg-danger">Buruk</span></td>
-                </tr>
-            </tbody>
-        </table>
+    <img src="logo_kvpm.png" alt="Logo Kolej Vokasional Pasir Mas" class="logo">
+    <h1>Kehadiran & Hasil Kerja Pelajar</h1>
+    
+    <label for="subjek">Pilih Subjek:</label>
+    <select id="subjek" onchange="changeSelection()">
+        <option value="Matematik">Matematik</option>
+        <option value="Sains">Sains</option>
+        <option value="Bahasa Melayu">Bahasa Melayu</option>
+        <option value="Bahasa Inggeris">Bahasa Inggeris</option>
+        <option value="Sejarah">Sejarah</option>
+    </select>
 
-        <a href="dashboard.html" class="btn btn-danger mt-3">Kembali ke Dashboard</a>
+    <br><br>
+    <input type="text" id="studentName" placeholder="Masukkan nama pelajar">
+    <button onclick="addStudent()">Tambah Pelajar</button>
+    <button onclick="removeStudentByName()">Buang Nama Pelajar</button>
+
+    <div class="table-container">
+        <table id="attendanceTable">
+            <tr>
+                <th>Nama Pelajar</th>
+                <th>Kehadiran</th>
+                <th>Point Harian</th>
+                <th>Catatan Guru</th>
+                <th>Hasil Kerja</th>
+            </tr>
+        </table>
     </div>
 
-    <script>
-        const ctx = document.getElementById('grafKehadiran').getContext('2d');
+    <button style="margin-top: 20px;" onclick="downloadReport()">Muat Turun Laporan</button>
 
-        // Data Kehadiran
-        const pelajar = ["Ali bin Ahmad", "Siti Nur Aisyah", "Mohd Izzat"];
-        const kehadiran = [85, 60, 40];
-
-        // Gradient warna untuk graf
-        let gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, 'rgba(0, 184, 148, 1)');
-        gradient.addColorStop(1, 'rgba(255, 118, 117, 0.3)');
-
-        const grafKehadiran = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: pelajar,
-                datasets: [{
-                    label: 'Jumlah Kehadiran',
-                    data: kehadiran,
-                    backgroundColor: gradient,
-                    borderColor: 'rgba(0, 184, 148, 1)',
-                    borderWidth: 1,
-                    borderRadius: 5
-                }]
-            },
-            options: {
-                responsive: true,
-                animation: {
-                    duration: 1500,
-                    easing: 'easeInOutQuad'
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(tooltipItem) {
-                                return 'Kehadiran: ' + tooltipItem.raw + '%';
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: {
-                            color: '#130f40',
-                            font: { weight: 'bold', size: 14 }
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 10,
-                            font: { size: 14 },
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
